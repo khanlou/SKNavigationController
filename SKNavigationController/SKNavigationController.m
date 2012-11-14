@@ -24,10 +24,7 @@
 	if (!self) {
 		return self;
 	}
-	
-	self.view.backgroundColor = [UIColor blueColor];
-	
-	
+		
 	internalRootViewController = rootViewController;
 	
 	return self;
@@ -43,13 +40,21 @@
 	[self.view addSubview:navigationBar];
 	navigationBar.delegate = self;
 	[navigationBar sizeToFit];
+	
+	navigationBar.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
+
 
 	self.viewControllers = @[internalRootViewController];
+	internalRootViewController = nil;
 }
 
 - (void) setViewControllers:(NSArray *)newViewControllers {
-	//reset navigation items
 	navigationBar.items = [NSArray array];
+	
+	for (UIViewController *viewController in self.childViewControllers) {
+		[viewController willMoveToParentViewController:nil];
+		[viewController removeFromParentViewController];
+	}
 	
 	for (UIViewController *viewController in newViewControllers) {		
 		[self pushViewController:viewController animated:NO];
@@ -61,104 +66,94 @@
 }
 
 - (void) pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
-	UIViewController *pushingFrom = nil;
+	UIViewController *oldViewController = nil;
 	if (self.childViewControllers.count > 0) {
-		pushingFrom = [self.childViewControllers lastObject];
+		oldViewController = [self.childViewControllers lastObject];
 	}
-	UIViewController *pushingTo = viewController;
-		
-	pushingTo.view.frame = CGRectMake(self.view.bounds.size.width,
+	UIViewController *newViewController = viewController;
+	
+	newViewController.view.frame = CGRectMake(self.view.bounds.size.width,
 							    self.navigationBar.bounds.size.height,
 							    self.view.bounds.size.width,
 							    self.view.bounds.size.height - self.navigationBar.bounds.size.height);
 	
-	
-	[pushingFrom willMoveToParentViewController:nil];
-	
-	[pushingTo willMoveToParentViewController:self];
-	
-	[self addChildViewController:pushingTo];
-	
-
-	if (!animated || !pushingFrom) {
-		[self.view addSubview:pushingTo.view];
-
-		pushingTo.view.frame = CGRectMake(self.view.bounds.origin.x,
-								    self.navigationBar.bounds.size.height,
-								    self.view.bounds.size.width,
-								    self.view.bounds.size.height - self.navigationBar.bounds.size.height);
 		
-		[pushingFrom removeFromParentViewController];
-		[pushingTo didMoveToParentViewController:self];
+	[self addChildViewController:newViewController];
+	
+	UINavigationItem *item = [self newNavigationItemForViewController:newViewController previousNavigationItem:navigationBar.topItem];
+	[navigationBar pushNavigationItem:item animated:animated];
 
+
+	[self.view addSubview:newViewController.view];
+	if (!animated || !oldViewController) {
+		[self.view addSubview:newViewController.view];
+		[oldViewController.view removeFromSuperview];
+		
+		newViewController.view.frame = CGRectMake(0,
+										  self.navigationBar.bounds.size.height,
+										  self.view.bounds.size.width,
+										  self.view.bounds.size.height - self.navigationBar.bounds.size.height);
+
+		[newViewController didMoveToParentViewController:self];
 	} else {
-		[self transitionFromViewController:pushingFrom
-					   toViewController:pushingTo
+		[self transitionFromViewController:oldViewController
+					   toViewController:newViewController
 							 duration:0.35f
 							  options:0
 						    animations:^{
-							    pushingTo.view.center = pushingFrom.view.center;
-							    pushingFrom.view.center = CGPointMake(pushingFrom.view.center.x - self.view.bounds.size.width, pushingFrom.view.center.y);
+							    newViewController.view.center = oldViewController.view.center;
+							    oldViewController.view.center = CGPointMake(oldViewController.view.center.x - self.view.bounds.size.width, oldViewController.view.center.y);
 						    }
 						    completion:^(BOOL finished) {
-							    [pushingTo didMoveToParentViewController:self];
+							    [newViewController didMoveToParentViewController:self];
 						    }];
 	}
-	
-	UINavigationItem *item = [self newNavigationItemForViewController:pushingTo previousNavigationItem:navigationBar.topItem];
-	[navigationBar pushNavigationItem:item animated:animated];
 }
 
 - (UIViewController *)popViewControllerAnimated:(BOOL)animated {	
-	UIViewController *poppingFrom = [self.childViewControllers lastObject];
-	UIViewController *poppingTo = self.childViewControllers[(self.childViewControllers.count - 2)];
+	UIViewController *upperViewController = [self.childViewControllers lastObject];
+	UIViewController *lowerViewController = self.childViewControllers[(self.childViewControllers.count - 2)];
 	
-	poppingTo.view.frame = CGRectMake(0 - self.view.bounds.size.width,
+	lowerViewController.view.frame = CGRectMake(0 - self.view.bounds.size.width,
 							    navigationBar.bounds.size.height,
 							    self.view.bounds.size.width,
 							    self.view.bounds.size.height - self.navigationBar.bounds.size.height);
 	
-	[poppingFrom willMoveToParentViewController:nil];
-	[poppingTo willMoveToParentViewController:self];
-	[self addChildViewController:poppingTo];
+	[upperViewController willMoveToParentViewController:nil];	
 	
-	
+	if (!userInitiatedPop) {
+		[navigationBar popNavigationItemAnimated:animated];
+	}
+	userInitiatedPop = NO;
+
 	if (!animated) {
-		[self.view addSubview:poppingTo.view];
+		[self.view addSubview:lowerViewController.view];
 		
-		poppingTo.view.frame = CGRectMake(0,
+		lowerViewController.view.frame = CGRectMake(0,
 								    self.navigationBar.bounds.size.height,
 								    self.view.bounds.size.width,
 								    self.view.bounds.size.height - self.navigationBar.bounds.size.height);
 		
-		[poppingFrom.view removeFromSuperview];
-		[poppingFrom removeFromParentViewController];
-		[poppingTo didMoveToParentViewController:self];
+		[upperViewController.view removeFromSuperview];
+		[upperViewController removeFromParentViewController];
 		
 	} else {
-		[self transitionFromViewController:poppingFrom
-					   toViewController:poppingTo
+		[self transitionFromViewController:upperViewController
+					   toViewController:lowerViewController
 							 duration:0.35
 							  options:0
 						    animations:^{
-							    poppingTo.view.center = poppingFrom.view.center;
-							    poppingFrom.view.center = CGPointMake(poppingFrom.view.center.x + self.view.bounds.size.width, poppingFrom.view.center.y);
+							    lowerViewController.view.center = upperViewController.view.center;
+							    upperViewController.view.center = CGPointMake(upperViewController.view.center.x + self.view.bounds.size.width, upperViewController.view.center.y);
 						    }
 						    completion:^(BOOL finished) {
-							    [poppingFrom removeFromParentViewController];
-							    [poppingTo didMoveToParentViewController:self];
+							    [upperViewController removeFromParentViewController];
 						    }];
 	}
 	
-	if (!userInitiatedPop) {
-		//set this to the proper navigation item array
-		[navigationBar popNavigationItemAnimated:animated];
-	}
-	
-	userInitiatedPop = NO;
 	
 	
-	return poppingTo;
+	return lowerViewController;
 
 }
 
