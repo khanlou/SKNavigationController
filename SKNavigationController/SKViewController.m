@@ -7,6 +7,7 @@
 //
 
 #import "SKViewController.h"
+#import "SKNavigationController.h"
 
 @interface SKViewController ()
 
@@ -26,6 +27,9 @@
 	label.backgroundColor = [UIColor clearColor];
 	label.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
 
+	UITapGestureRecognizer *gr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)];
+	[self.view addGestureRecognizer:gr];
+
 	[self.view addSubview:label];
 	
 	self.view.backgroundColor = [UIColor blueColor];
@@ -38,42 +42,49 @@
 	index = newIndex;
 	label.text = [NSString stringWithFormat:@"%d", index];
 	
+	
 	self.title = [NSString stringWithFormat:@"Number %d", index];
 }
 
-- (void) viewWillAppear:(BOOL)animated {
-	[super viewWillAppear:animated];
-	NSLog(@"%@ will appear", self);
+- (void) tapped:(UITapGestureRecognizer*)sender {
+	if (sender.state == UIGestureRecognizerStateEnded) {
+		[((SKNavigationController*)self.parentViewController) popViewControllerAnimated:YES];
+	}
 }
 
-- (void) viewDidAppear:(BOOL)animated {
-	[super viewDidAppear:animated];
-	NSLog(@"%@ did appear", self);
-}
-
-- (void) viewWillDisappear:(BOOL)animated {
-	[super viewWillDisappear:animated];
-	NSLog(@"%@ will disappear", self);
-}
-
-- (void) viewDidDisappear:(BOOL)animated {
-	[super viewDidDisappear:animated];
-	NSLog(@"%@ did disappear", self);
-}
-
-- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-	NSLog(@"child will rotate");
-}
-
-- (void) willMoveToParentViewController:(UIViewController *)parent {
-	[super willMoveToParentViewController:parent];
-	NSLog(@"%@ will move to parent %@", self, parent);
-}
-
-- (void) didMoveToParentViewController:(UIViewController *)parent {
-	[super didMoveToParentViewController:parent];
-	NSLog(@"%@ did move to parent %@", self, parent);
-}
+//- (void) viewWillAppear:(BOOL)animated {
+//	[super viewWillAppear:animated];
+//	NSLog(@"%@ will appear", self);
+//}
+//
+//- (void) viewDidAppear:(BOOL)animated {
+//	[super viewDidAppear:animated];
+//	NSLog(@"%@ did appear", self);
+//}
+//
+//- (void) viewWillDisappear:(BOOL)animated {
+//	[super viewWillDisappear:animated];
+//	NSLog(@"%@ will disappear", self);
+//}
+//
+//- (void) viewDidDisappear:(BOOL)animated {
+//	[super viewDidDisappear:animated];
+//	NSLog(@"%@ did disappear", self);
+//}
+//
+//- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+//	NSLog(@"child will rotate");
+//}
+//
+//- (void) willMoveToParentViewController:(UIViewController *)parent {
+//	[super willMoveToParentViewController:parent];
+//	NSLog(@"%@ will move to parent %@", self, parent);
+//}
+//
+//- (void) didMoveToParentViewController:(UIViewController *)parent {
+//	[super didMoveToParentViewController:parent];
+//	NSLog(@"%@ did move to parent %@", self, parent);
+//}
 
 
 @end
