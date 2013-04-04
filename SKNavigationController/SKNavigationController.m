@@ -105,7 +105,6 @@
 }
 
 - (UIViewController *)popViewControllerAnimated:(BOOL)animated {
-	NSLog(@"pop vc");
 	UIViewController *upperViewController = [self.childViewControllers lastObject];
 	UIViewController *lowerViewController = self.childViewControllers[(self.childViewControllers.count - 2)];
 	
@@ -121,7 +120,6 @@
 							    self.view.bounds.size.height - self.navigationBar.bounds.size.height);
 	
 	[upperViewController willMoveToParentViewController:nil];
-	NSLog(@"%d %d", self.navigationBar.items.count, self.viewControllers.count);
 
 	[self transitionFromViewController:upperViewController
 					  toViewController:lowerViewController
@@ -134,7 +132,6 @@
 							completion:^(BOOL finished){
 								[upperViewController removeFromParentViewController];
 							}];
-	NSLog(@"%d %d", self.navigationBar.items.count, self.viewControllers.count);
 
 	return upperViewController;
 }
